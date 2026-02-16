@@ -3,15 +3,43 @@ import pandas as pd
 import plotly.express as px
 
 # 1. Page Configuration
-st.set_page_config(page_title="Projects for Peace | Global Impact", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(
+    page_title="Projects for Peace | UN Global Index", 
+    layout="wide", 
+    initial_sidebar_state="expanded"
+)
 
-# Custom CSS for the "Boardroom" look
+# Custom CSS for the United Nations Aesthetic
 st.markdown("""
     <style>
-    .main { background-color: #0e1117; }
-    div.stMetric { background-color: #1c1f26; border: 1px solid #31333f; padding: 20px; border-radius: 8px; }
-    [data-testid="stExpander"] { border: 1px solid #31333f; background-color: #1c1f26; border-radius: 8px; }
-    .stDataFrame { border: 1px solid #31333f; border-radius: 8px; }
+    /* Main background to clean white */
+    .main { background-color: #FFFFFF; }
+    
+    /* Header styling in UN Blue */
+    h1, h2, h3 { 
+        color: #009EDB; 
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
+        font-weight: 700;
+    }
+    
+    /* Sidebar styling */
+    section[data-testid="stSidebar"] {
+        background-color: #F8F9FA;
+        border-right: 1px solid #E0E0E0;
+    }
+
+    /* Metric cards styling */
+    div.stMetric {
+        background-color: #F0F7FF;
+        border-left: 5px solid #009EDB;
+        padding: 15px;
+        border-radius: 4px;
+    }
+
+    /* Table styling */
+    .stDataFrame {
+        border: 1px solid #E0E0E0;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -20,47 +48,55 @@ st.markdown("""
 def load_data():
     df = pd.read_csv('projects_for_peace_master_2007_2025_with_lonlat.csv')
     df = df.dropna(subset=['Latitude', 'Longitude'])
-    # Ensure Year is a string for filtering
-    df['Year'] = df['Year'].astype(str)
+    # Ensure Year is a clean string
+    df['Year'] = df['Year'].astype(str).str.replace(',', '')
     return df
 
 df = load_data()
 
-# 3. Header
-st.title("🌎 PROJECTS FOR PEACE")
-st.markdown("<h3 style='color: #808495; font-weight: 400;'>Global Strategic Impact Index</h3>", unsafe_allow_html=True)
+# 3. Sidebar (LEFT SIDE) - Search & Filters
+st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/Flag_of_the_United_Nations.svg/640px-Flag_of_the_United_Nations.svg.png", width=120)
+st.sidebar.title("Search Parameters")
+st.sidebar.markdown("---")
 
-# 4. Professional Filters
-with st.expander("🔍 FILTERS & PARAMETERS", expanded=True):
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        years = sorted(df['Year'].unique(), reverse=True)
-        selected_years = st.multiselect("Reporting Periods", years, default=years)
-    with col2:
-        institutions = sorted(df['Institution'].unique())
-        selected_inst = st.multiselect("Lead Institutions", institutions)
-    with col3:
-        search_query = st.text_input("Global Search", placeholder="Search project titles or leaders...")
+# Year Multi-select
+years = sorted(df['Year'].unique(), reverse=True)
+selected_years = st.sidebar.multiselect("Reporting Periods", years, default=years)
 
-# Apply Filtering
+# Institution Multi-select
+institutions = sorted(df['Institution'].unique())
+selected_inst = st.sidebar.multiselect("Educational Institutions", institutions)
+
+# Country Multi-select
+countries = sorted(df['Project Country'].dropna().unique())
+selected_country = st.sidebar.multiselect("Project Countries", countries)
+
+# Text Search
+search_query = st.sidebar.text_input("Project Keyword Search", placeholder="e.g., Sustainability, Health...")
+
+# --- Apply Filtering Logic ---
 filtered_df = df[df['Year'].isin(selected_years)]
 if selected_inst:
     filtered_df = filtered_df[filtered_df['Institution'].isin(selected_inst)]
+if selected_country:
+    filtered_df = filtered_df[filtered_df['Project Country'].isin(selected_country)]
 if search_query:
     filtered_df = filtered_df[
         filtered_df['Project Title'].str.contains(search_query, case=False, na=False) | 
         filtered_df['Project Leader(s)'].str.contains(search_query, case=False, na=False)
     ]
 
-# 5. Executive Metrics
-m1, m2, m3 = st.columns(3)
-m1.metric("TOTAL INITIATIVES", f"{len(filtered_df)}")
-m2.metric("COUNTRIES REPRESENTED", f"{filtered_df['Project Country'].nunique()}")
-m3.metric("INSTITUTIONAL PARTNERS", f"{filtered_df['Institution'].nunique()}")
+# 4. Main Content (RIGHT SIDE)
+st.title("Projects for Peace")
+st.subheader("Global Peace and Security Initiative Index")
 
-# 6. The Interactive Globe
-# Using "Plotly White" for a cleaner, high-finance look if you prefer, 
-# but keeping "Plotly Dark" for the 'Cool' factor.
+# Metric Row
+m1, m2, m3 = st.columns(3)
+m1.metric("Total Initiatives", f"{len(filtered_df)}")
+m2.metric("Nations Impacted", f"{filtered_df['Project Country'].nunique()}")
+m3.metric("University Partners", f"{filtered_df['Institution'].nunique()}")
+
+# 5. The UN-Styled Globe
 fig = px.scatter_geo(
     filtered_df,
     lat="Latitude",
@@ -75,25 +111,25 @@ fig = px.scatter_geo(
         "Longitude": False
     },
     projection="orthographic",
-    template="plotly_dark",
+    template="plotly_white" # Clean white template
 )
 
-# Styling the Pins & Globe
+# Styling for the "Peace" vibe
 fig.update_traces(
     marker=dict(
-        size=7, 
-        color="#00FFC8", # Glowing Mint
-        opacity=0.8, 
+        size=8, 
+        color="#009EDB", # UN Blue
+        opacity=0.6, 
         line=dict(width=0.5, color="white")
     )
 )
 
 fig.update_geos(
-    showcoastlines=True, coastlinecolor="#444",
-    showland=True, landcolor="#1a1a1a",
-    showocean=True, oceancolor="#0a0a0a",
-    showcountries=True, countrycolor="#444",
-    lataxis_showgrid=False, lonaxis_showgrid=False
+    showcoastlines=True, coastlinecolor="#DADADA",
+    showland=True, landcolor="#F2F2F2",
+    showocean=True, oceancolor="#E8F4F8", # Soft water blue
+    showlakes=True, lakecolor="#E8F4F8",
+    showcountries=True, countrycolor="#DADADA"
 )
 
 fig.update_layout(
@@ -104,12 +140,13 @@ fig.update_layout(
 
 st.plotly_chart(fig, use_container_width=True)
 
-# 7. The Project Ledger (Table)
-st.subheader("Detailed Project Ledger")
+# 6. Detailed Project Ledger
+st.markdown("### Official Project Record")
 st.dataframe(
     filtered_df[['Year', 'Institution', 'Project Title', 'Project Country', 'Project Leader(s)']],
     use_container_width=True,
     hide_index=True
 )
 
-st.caption("© Projects for Peace Index | 2007-2025")
+st.markdown("---")
+st.caption("This index represents a collective effort to build sustainable peace across global borders. | © Projects for Peace")
