@@ -9,7 +9,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for a Clean, Professional Aesthetic (Light & Airy)
+# Custom CSS for a Clean, Professional Aesthetic
 st.markdown("""
     <style>
     .main { background-color: #FFFFFF; }
@@ -21,11 +21,12 @@ st.markdown("""
         background-color: #fcfcfc;
         border-right: 1px solid #eeeeee;
     }
+    /* Styling the metric cards to be softer */
     div.stMetric {
-        background-color: #f8f9fa;
-        border-top: 3px solid #3498db;
+        background-color: #f0f7ff;
+        border-radius: 10px;
         padding: 15px;
-        border-radius: 4px;
+        border: 1px solid #d0e1f9;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -35,30 +36,29 @@ st.markdown("""
 def load_data():
     df = pd.read_csv('projects_for_peace_master_2007_2025_with_lonlat.csv')
     df = df.dropna(subset=['Latitude', 'Longitude'])
-    # Convert Year to string so Plotly treats it as a discrete category (for distinct colors)
     df['Year_Str'] = df['Year'].astype(str).str.replace(',', '')
     return df
 
 df = load_data()
 
-# 3. Sidebar (LEFT SIDE) - Filters
-st.sidebar.title("Filter Database")
-st.sidebar.markdown("Use the controls below to refine the global map.")
+# 3. Sidebar (LEFT SIDE) - Filters with Emojis
+st.sidebar.title("🔍 Filter Database")
+st.sidebar.markdown("Refine the global view using the parameters below.")
 
 # Year Multi-select
 all_years = sorted(df['Year_Str'].unique(), reverse=True)
-selected_years = st.sidebar.multiselect("Select Years", all_years, default=all_years)
+selected_years = st.sidebar.multiselect("📅 Select Years", all_years, default=all_years)
 
 # Institution Multi-select
 all_institutions = sorted(df['Institution'].unique())
-selected_inst = st.sidebar.multiselect("Select Institutions", all_institutions)
+selected_inst = st.sidebar.multiselect("🎓 Select Institutions", all_institutions)
 
 # Country Multi-select
 all_countries = sorted(df['Project Country'].dropna().unique())
-selected_country = st.sidebar.multiselect("Select Countries", all_countries)
+selected_country = st.sidebar.multiselect("📍 Select Countries", all_countries)
 
 # Text Search
-search_query = st.sidebar.text_input("Keyword Search", placeholder="Search project title or leader...")
+search_query = st.sidebar.text_input("⌨️ Keyword Search", placeholder="Search titles or leaders...")
 
 # Filtering Logic
 filtered_df = df[df['Year_Str'].isin(selected_years)]
@@ -74,53 +74,50 @@ if search_query:
 
 # 4. Main Content (RIGHT SIDE)
 st.title("Projects for Peace")
-st.markdown("### A Global Registry of Student-Led Peace Initiatives")
+st.markdown("### 🌎 A Global Registry of Student-Led Peace Initiatives")
 
-# Metrics
+# Metrics with Emojis
 m1, m2, m3 = st.columns(3)
-m1.metric("Total Projects", f"{len(filtered_df)}")
-m2.metric("Nations Reach", f"{filtered_df['Project Country'].nunique()}")
-m3.metric("University Partners", f"{filtered_df['Institution'].nunique()}")
+m1.metric("🕊️ Total Projects", f"{len(filtered_df)}")
+m2.metric("🗺️ Nations Impacted", f"{filtered_df['Project Country'].nunique()}")
+m3.metric("🏫 University Partners", f"{filtered_df['Institution'].nunique()}")
 
 # 5. The Multi-Color Globe
-# Using a qualitative color scale (Alphabet) to provide distinct colors for ~19 years
 fig = px.scatter_geo(
     filtered_df,
     lat="Latitude",
     lon="Longitude",
-    color="Year_Str", # This creates the distinct colors per year
+    color="Year_Str", 
     hover_name="Project Title",
     hover_data={
         "Institution": True,
-        "Year_Str": False,
         "Project Country": True,
         "Project Leader(s)": True,
         "Year": True,
+        "Year_Str": False,
         "Latitude": False,
         "Longitude": False
     },
     projection="orthographic",
     template="plotly_white",
-    color_discrete_sequence=px.colors.qualitative.Alphabet # High-variety color palette
+    color_discrete_sequence=px.colors.qualitative.Alphabet 
 )
 
-# Refined Globe Styling
 fig.update_traces(
     marker=dict(size=7, opacity=0.85, line=dict(width=0.5, color='white'))
 )
 
 fig.update_geos(
     showcoastlines=True, coastlinecolor="#cccccc",
-    showland=True, landcolor="#f9f9f9",
+    showland=True, landcolor="#fcfcfc",
     showocean=True, oceancolor="#eef8ff",
-    showcountries=True, countrycolor="#eeeeee",
-    resolution=50 # Better detail for country borders
+    showcountries=True, countrycolor="#eeeeee"
 )
 
 fig.update_layout(
-    height=750,
+    height=700,
     margin={"r":0,"t":20,"l":0,"b":0},
-    legend_title_text='Project Year',
+    legend_title_text='Year',
     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
     paper_bgcolor="rgba(0,0,0,0)"
 )
@@ -128,7 +125,7 @@ fig.update_layout(
 st.plotly_chart(fig, use_container_width=True)
 
 # 6. Data Ledger
-st.markdown("---")
+st.markdown("### 📋 Detailed Project Ledger")
 st.dataframe(
     filtered_df[['Year', 'Institution', 'Project Title', 'Project Country', 'Project Leader(s)']],
     use_container_width=True,
