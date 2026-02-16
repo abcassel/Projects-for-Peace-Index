@@ -82,29 +82,28 @@ m1.metric("🕊️ Total Projects", f"{len(filtered_df)}")
 m2.metric("🗺️ Nations Impacted", f"{filtered_df['Project Country'].nunique()}")
 m3.metric("🏫 University Partners", f"{filtered_df['Institution'].nunique()}")
 
-# 5. The Multi-Color Globe with Emoji Tooltips
+# 5. The Multi-Color Globe with Emoji-Only Labels
 fig = px.scatter_geo(
     filtered_df,
     lat="Latitude",
     lon="Longitude",
     color="Year_Str", 
     hover_name="Project Title",
-    # Define what data shows up in the pop-up
     hover_data={
         "Institution": True,
         "Project Country": True,
         "Project Leader(s)": True,
         "Year": True,
-        "Year_Str": False, # Hide the helper string column
+        "Year_Str": False,
         "Latitude": False,
         "Longitude": False
     },
-    # REPLACE column names with Emoji Labels in the pop-up
+    # REMOVED text from labels, leaving only emojis
     labels={
-        "Institution": "🏫 Institution",
-        "Project Country": "📍 Country",
-        "Project Leader(s)": "👤 Leader(s)",
-        "Year": "📅 Year"
+        "Institution": "🏫",
+        "Project Country": "📍",
+        "Project Leader(s)": "👤",
+        "Year": "📅"
     },
     projection="orthographic",
     template="plotly_white",
