@@ -21,7 +21,6 @@ st.markdown("""
         background-color: #fcfcfc;
         border-right: 1px solid #eeeeee;
     }
-    /* Styling the metric cards to be softer */
     div.stMetric {
         background-color: #f0f7ff;
         border-radius: 10px;
@@ -36,6 +35,7 @@ st.markdown("""
 def load_data():
     df = pd.read_csv('projects_for_peace_master_2007_2025_with_lonlat.csv')
     df = df.dropna(subset=['Latitude', 'Longitude'])
+    # Convert Year to string for discrete coloring
     df['Year_Str'] = df['Year'].astype(str).str.replace(',', '')
     return df
 
@@ -82,21 +82,29 @@ m1.metric("🕊️ Total Projects", f"{len(filtered_df)}")
 m2.metric("🗺️ Nations Impacted", f"{filtered_df['Project Country'].nunique()}")
 m3.metric("🏫 University Partners", f"{filtered_df['Institution'].nunique()}")
 
-# 5. The Multi-Color Globe
+# 5. The Multi-Color Globe with Emoji Tooltips
 fig = px.scatter_geo(
     filtered_df,
     lat="Latitude",
     lon="Longitude",
     color="Year_Str", 
     hover_name="Project Title",
+    # Define what data shows up in the pop-up
     hover_data={
         "Institution": True,
         "Project Country": True,
         "Project Leader(s)": True,
         "Year": True,
-        "Year_Str": False,
+        "Year_Str": False, # Hide the helper string column
         "Latitude": False,
         "Longitude": False
+    },
+    # REPLACE column names with Emoji Labels in the pop-up
+    labels={
+        "Institution": "🏫 Institution",
+        "Project Country": "📍 Country",
+        "Project Leader(s)": "👤 Leader(s)",
+        "Year": "📅 Year"
     },
     projection="orthographic",
     template="plotly_white",
